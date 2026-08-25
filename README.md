@@ -13,6 +13,18 @@
 
 ---
 
+## About This Fork
+
+**PriceGhostNeo** is a fork of [clucraft/PriceGhost](https://github.com/clucraft/PriceGhost) — all credit for the original design, the multi-strategy extraction system, and the Price Selection Modal goes to [clucraft](https://github.com/clucraft). This fork exists to run our own patched build rather than wait on upstream, and to have a place to make whatever future changes we want without needing to justify them as a general-purpose contribution back.
+
+The immediate reason for forking was a currency bug: adding a product always recorded its price in USD regardless of the store's actual currency (the code had a literal `// TODO: Get currency from selection` next to a hardcoded `'USD'`), and the UI only had display symbols for USD/EUR/GBP/CHF, silently mislabeling everything else (RON included) as `$`. Fixed here:
+- The currency selected in the Price Selection Modal now actually gets saved, instead of being discarded in favor of a hardcoded `'USD'`.
+- Currency display now falls back to showing the real currency code (e.g. `RON 164.99`) instead of a wrong `$` symbol for anything outside USD/EUR/GBP/CHF.
+
+We track upstream via a `git remote` named `upstream` and pull in improvements from there when useful.
+
+---
+
 ## You Choose the Price. Always.
 
 **Unlike other price trackers that silently pick a price and hope it's right**, PriceGhost uses a multi-strategy extraction system with a unique **Price Voting Modal** that puts you in control.
@@ -181,8 +193,8 @@ PriceGhost has **site-specific scrapers** optimized for:
 
 ```bash
 # Clone the repository
-git clone https://github.com/clucraft/PriceGhost.git
-cd PriceGhost
+git clone https://github.com/alexbartisro/PriceGhostNeo.git
+cd PriceGhostNeo
 
 # Start all services
 docker-compose up -d
