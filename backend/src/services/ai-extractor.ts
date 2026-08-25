@@ -38,6 +38,21 @@ export interface AIStockStatusResult {
   reason: string;
 }
 
+// AI provider SDKs here don't set their own request timeout, so a slow/overloaded
+// provider (observed: Gemini 503 "high demand") can otherwise stall the whole
+// scrape request well past nginx's proxy timeout with no bound at all.
+const AI_VERIFICATION_TIMEOUT_MS = 30000;
+
+function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error(`${label} timed out after ${ms}ms`)), ms);
+    promise.then(
+      (value) => { clearTimeout(timer); resolve(value); },
+      (error) => { clearTimeout(timer); reject(error); }
+    );
+  });
+}
+
 const VERIFICATION_PROMPT = `You are a price and availability verification assistant. I scraped a product page and found a price. Please verify if this price is correct AND if the product is currently available for purchase.
 
 Scraped Price: $SCRAPED_PRICE$ $CURRENCY$
@@ -876,25 +891,30 @@ export async function tryAIVerification(
     }
 
     // Need a configured provider
+    let verification: Promise<AIVerificationResult | null> | null = null;
     if (settings.ai_provider === 'anthropic' && settings.anthropic_api_key) {
       const modelToUse = settings.anthropic_model || DEFAULT_ANTHROPIC_MODEL;
       console.log(`[AI Verify] Using Anthropic (${modelToUse}) to verify $${scrapedPrice} for ${url}`);
-      return await verifyWithAnthropic(html, scrapedPrice, currency, settings.anthropic_api_key, settings.anthropic_model);
+      verification = verifyWithAnthropic(html, scrapedPrice, currency, settings.anthropic_api_key, settings.anthropic_model);
     } else if (settings.ai_provider === 'openai' && settings.openai_api_key) {
       const modelToUse = settings.openai_model || DEFAULT_OPENAI_MODEL;
       console.log(`[AI Verify] Using OpenAI (${modelToUse}) to verify $${scrapedPrice} for ${url}`);
-      return await verifyWithOpenAI(html, scrapedPrice, currency, settings.openai_api_key, settings.openai_model);
+      verification = verifyWithOpenAI(html, scrapedPrice, currency, settings.openai_api_key, settings.openai_model);
     } else if (settings.ai_provider === 'ollama' && settings.ollama_base_url && settings.ollama_model) {
       console.log(`[AI Verify] Using Ollama (${settings.ollama_model}) to verify $${scrapedPrice} for ${url}`);
-      return await verifyWithOllama(html, scrapedPrice, currency, settings.ollama_base_url, settings.ollama_model);
+      verification = verifyWithOllama(html, scrapedPrice, currency, settings.ollama_base_url, settings.ollama_model);
     } else if (settings.ai_provider === 'gemini' && settings.gemini_api_key) {
       const modelToUse = settings.gemini_model || DEFAULT_GEMINI_MODEL;
       console.log(`[AI Verify] Using Gemini (${modelToUse}) to verify $${scrapedPrice} for ${url}`);
-      return await verifyWithGemini(html, scrapedPrice, currency, settings.gemini_api_key, settings.gemini_model);
+      verification = verifyWithGemini(html, scrapedPrice, currency, settings.gemini_api_key, settings.gemini_model);
     }
 
-    console.log(`[AI Verify] Verification enabled but no provider configured`);
-    return null;
+    if (!verification) {
+      console.log(`[AI Verify] Verification enabled but no provider configured`);
+      return null;
+    }
+
+    return await withTimeout(verification, AI_VERIFICATION_TIMEOUT_MS, `[AI Verify] ${url}`);
   } catch (error) {
     console.error(`[AI Verify] Verification failed for ${url}:`, error);
     return null;

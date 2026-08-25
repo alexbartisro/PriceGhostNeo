@@ -86,20 +86,24 @@ export default function Dashboard() {
   const handlePriceSelected = async (selectedPrice: number, selectedMethod: string, selectedCurrency: string) => {
     if (!priceReviewData) return;
 
-    const response = await productsApi.create(
-      priceReviewData.url,
-      pendingRefreshInterval,
-      selectedPrice,
-      selectedMethod,
-      selectedCurrency
-    );
+    try {
+      const response = await productsApi.create(
+        priceReviewData.url,
+        pendingRefreshInterval,
+        selectedPrice,
+        selectedMethod,
+        selectedCurrency
+      );
 
-    // When selecting a price, the API should always return a Product
-    if (!isPriceReviewResponse(response.data)) {
-      setProducts((prev) => [response.data as Product, ...prev]);
+      // When selecting a price, the API should always return a Product
+      if (!isPriceReviewResponse(response.data)) {
+        setProducts((prev) => [response.data as Product, ...prev]);
+      }
+      setShowPriceModal(false);
+      setPriceReviewData(null);
+    } catch (err) {
+      setError('Failed to add product: the site took too long to respond or an error occurred. Please try again.');
     }
-    setShowPriceModal(false);
-    setPriceReviewData(null);
   };
 
   const handlePriceModalClose = () => {
