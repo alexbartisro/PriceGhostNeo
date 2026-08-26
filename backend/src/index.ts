@@ -210,6 +210,13 @@ async function runMigrations() {
         IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'products' AND column_name = 'checking_paused') THEN
           ALTER TABLE products ADD COLUMN checking_paused BOOLEAN DEFAULT false;
         END IF;
+        -- Discount/voucher code detected on the product page (AI verification byproduct)
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'products' AND column_name = 'discount_code') THEN
+          ALTER TABLE products ADD COLUMN discount_code VARCHAR(50);
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'products' AND column_name = 'discount_text') THEN
+          ALTER TABLE products ADD COLUMN discount_text TEXT;
+        END IF;
       END $$;
     `);
 

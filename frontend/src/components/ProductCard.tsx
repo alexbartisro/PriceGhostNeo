@@ -223,6 +223,18 @@ export default function ProductCard({ product, onDelete, onRefresh, isSelected, 
           height: 12px;
         }
 
+        .product-notification-badge.discount-badge {
+          background: #ccfbf1;
+          color: #0f766e;
+          border-color: transparent;
+          font-weight: 600;
+        }
+
+        [data-theme="dark"] .product-notification-badge.discount-badge {
+          background: rgba(20, 184, 166, 0.2);
+          color: #5eead4;
+        }
+
         .product-price-section {
           display: flex;
           flex-direction: column;
@@ -482,8 +494,20 @@ export default function ProductCard({ product, onDelete, onRefresh, isSelected, 
       <div className="product-info">
         <h3 className="product-name">{product.name || 'Unknown Product'}</h3>
         <p className="product-source">{truncateUrl(product.url)}</p>
-        {(product.price_drop_threshold || product.target_price || product.notify_back_in_stock) && (
+        {(product.price_drop_threshold || product.target_price || product.notify_back_in_stock || product.discount_code || product.discount_text) && (
           <div className="product-notifications">
+            {(product.discount_code || product.discount_text) && (
+              <span
+                className="product-notification-badge discount-badge"
+                title="A discount may be available — check the product page"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M20.59 13.41 11 3.83A2 2 0 0 0 9.59 3.24L3 3v6.59a2 2 0 0 0 .59 1.41l9.58 9.58a2 2 0 0 0 2.83 0l4.59-4.58a2 2 0 0 0 0-2.83Z" />
+                  <circle cx="7.5" cy="7.5" r="1.5" fill="currentColor" stroke="none" />
+                </svg>
+                Deal available
+              </span>
+            )}
             {product.price_drop_threshold && (
               <span className="product-notification-badge" title="Price drop alert">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

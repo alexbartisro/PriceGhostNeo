@@ -36,6 +36,8 @@ export interface ScrapedProductWithCandidates {
   priceCandidates: PriceCandidate[];
   needsReview: boolean;
   selectedMethod?: ExtractionMethod; // Which method was used for final price
+  discountCode: string | null;
+  discountText: string | null;
 }
 
 // Check if two prices are "close enough" to be considered the same (within 5%)
@@ -324,6 +326,8 @@ export interface ScrapedProduct {
   url: string;
   stockStatus: StockStatus;
   aiStatus: AIStatus;
+  discountCode: string | null;
+  discountText: string | null;
 }
 
 // Site-specific scraper configurations
@@ -1131,6 +1135,8 @@ export async function scrapeProduct(url: string, userId?: number): Promise<Scrap
     url,
     stockStatus: 'unknown',
     aiStatus: null,
+    discountCode: null,
+    discountText: null,
   };
 
   let html: string = '';
@@ -1318,6 +1324,9 @@ export async function scrapeProduct(url: string, userId?: number): Promise<Scrap
               result.stockStatus = verifyResult.stockStatus;
             }
           }
+
+          result.discountCode = verifyResult.discountCode;
+          result.discountText = verifyResult.discountText;
         }
       } catch (verifyError) {
         console.error(`[AI Verify] Verification failed for ${url}:`, verifyError);
@@ -1376,6 +1385,8 @@ export async function scrapeProductWithVoting(
     aiStatus: null,
     priceCandidates: [],
     needsReview: false,
+    discountCode: null,
+    discountText: null,
   };
 
   let html: string = '';
@@ -1732,6 +1743,9 @@ export async function scrapeProductWithVoting(
               result.stockStatus = verifyResult.stockStatus;
             }
           }
+
+          result.discountCode = verifyResult.discountCode;
+          result.discountText = verifyResult.discountText;
         }
       } catch (verifyError) {
         console.error(`[Voting] AI verification failed:`, verifyError);

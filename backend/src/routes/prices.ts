@@ -1,7 +1,8 @@
 import { Router, Response } from 'express';
 import { AuthRequest, authMiddleware } from '../middleware/auth';
-import { productQueries, priceHistoryQueries, stockStatusHistoryQueries } from '../models';
+import { productQueries, priceHistoryQueries, stockStatusHistoryQueries, userQueries, notificationHistoryQueries, NotificationType } from '../models';
 import { scrapeProductWithVoting, ExtractionMethod } from '../services/scraper';
+import { sendNotifications, NotificationPayload } from '../services/notifications';
 
 const router = Router();
 
@@ -94,6 +95,42 @@ router.post('/:productId/refresh', async (req: AuthRequest, res: Response) => {
         scrapedData.aiStatus
       );
     }
+
+    // Check for a newly-detected (or changed) discount/voucher code
+    const hasNewDiscount =
+      (scrapedData.discountCode || scrapedData.discountText) &&
+      (scrapedData.discountCode !== product.discount_code || scrapedData.discountText !== product.discount_text);
+
+    if (hasNewDiscount) {
+      try {
+        const userSettings = await userQueries.getNotificationSettings(userId);
+        if (userSettings) {
+          const payload: NotificationPayload = {
+            productName: product.name || 'Unknown Product',
+            productUrl: product.url,
+            type: 'voucher_available',
+            discountCode: scrapedData.discountCode,
+            discountText: scrapedData.discountText,
+          };
+          const result = await sendNotifications(userSettings, payload);
+
+          if (result.channelsNotified.length > 0) {
+            await notificationHistoryQueries.create({
+              user_id: userId,
+              product_id: productId,
+              notification_type: 'voucher_available' as NotificationType,
+              channels_notified: result.channelsNotified,
+              product_name: product.name || 'Unknown Product',
+              product_url: product.url,
+            });
+          }
+        }
+      } catch (notifyError) {
+        console.error(`Failed to send voucher notification for product ${productId}:`, notifyError);
+      }
+    }
+
+    await productQueries.updateDiscountInfo(productId, scrapedData.discountCode, scrapedData.discountText);
 
     // Update last_checked timestamp and schedule next check
     await productQueries.updateLastChecked(productId, product.refresh_interval);

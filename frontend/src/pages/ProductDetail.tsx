@@ -338,6 +338,53 @@ export default function ProductDetail() {
           color: #4ade80;
         }
 
+        .product-detail-discount {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 1rem;
+          margin-bottom: 1rem;
+          padding: 0.875rem 1rem;
+          background: #ccfbf1;
+          border: 1px dashed #0f766e;
+          border-radius: 0.5rem;
+        }
+
+        [data-theme="dark"] .product-detail-discount {
+          background: rgba(20, 184, 166, 0.12);
+          border-color: #2dd4bf;
+        }
+
+        .product-detail-discount-label {
+          font-size: 0.75rem;
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 0.025em;
+          color: #0f766e;
+          margin-bottom: 0.25rem;
+        }
+
+        [data-theme="dark"] .product-detail-discount-label {
+          color: #5eead4;
+        }
+
+        .product-detail-discount-code {
+          font-family: monospace;
+          font-size: 1rem;
+          font-weight: 700;
+          color: var(--text);
+          letter-spacing: 0.05em;
+        }
+
+        .product-detail-discount-text {
+          font-size: 0.875rem;
+          color: var(--text);
+        }
+
+        .product-detail-discount-copy {
+          flex-shrink: 0;
+        }
+
         .product-detail-meta {
           margin-top: 1.5rem;
           padding-top: 1.5rem;
@@ -457,6 +504,39 @@ export default function ProductDetail() {
                 {priceChange > 0 ? '↑' : '↓'}{' '}
                 {Math.abs(priceChange * 100).toFixed(1)}% since tracking started
               </span>
+            )}
+
+            {(product.discount_code || product.discount_text) && (
+              <div className="product-detail-discount">
+                <div>
+                  <div className="product-detail-discount-label">
+                    Discount detected
+                    {product.last_checked && ` · as of ${new Date(product.last_checked).toLocaleDateString()}`}
+                  </div>
+                  {product.discount_code ? (
+                    <span className="product-detail-discount-code">{product.discount_code}</span>
+                  ) : (
+                    <span className="product-detail-discount-text">{product.discount_text}</span>
+                  )}
+                  {product.discount_code && product.discount_text && (
+                    <div className="product-detail-discount-text" style={{ marginTop: '0.25rem' }}>
+                      {product.discount_text}
+                    </div>
+                  )}
+                </div>
+                {product.discount_code && (
+                  <button
+                    type="button"
+                    className="btn btn-secondary product-detail-discount-copy"
+                    onClick={() => {
+                      navigator.clipboard.writeText(product.discount_code!);
+                      showToast('Discount code copied');
+                    }}
+                  >
+                    Copy code
+                  </button>
+                )}
+              </div>
             )}
 
             <div className="product-detail-meta">

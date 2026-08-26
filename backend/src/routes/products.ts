@@ -59,6 +59,9 @@ router.post('/', async (req: AuthRequest, res: Response) => {
 
       // Store the anchor price - used on refresh to select the correct variant
       await productQueries.updateAnchorPrice(product.id, selectedPrice);
+
+      // Store any discount/voucher code detected during the confirm-price scrape
+      await productQueries.updateDiscountInfo(product.id, scrapedData.discountCode, scrapedData.discountText);
       console.log(`[Products] Saved anchor price ${selectedPrice} for product ${product.id} (method: ${selectedMethod})`);
 
       // Record the user-selected price
@@ -143,6 +146,9 @@ router.post('/', async (req: AuthRequest, res: Response) => {
     if (scrapedData.selectedMethod) {
       await productQueries.updateExtractionMethod(product.id, scrapedData.selectedMethod);
     }
+
+    // Store any discount/voucher code detected during the initial scrape
+    await productQueries.updateDiscountInfo(product.id, scrapedData.discountCode, scrapedData.discountText);
 
     // Record initial price if available
     if (scrapedData.price) {

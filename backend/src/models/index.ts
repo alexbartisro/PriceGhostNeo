@@ -370,6 +370,8 @@ export interface Product {
   ai_verification_disabled: boolean;
   ai_extraction_disabled: boolean;
   checking_paused: boolean;
+  discount_code: string | null;
+  discount_text: string | null;
   created_at: Date;
 }
 
@@ -607,6 +609,13 @@ export const productQueries = {
     await pool.query(
       'UPDATE products SET stock_status = $1 WHERE id = $2',
       [stockStatus, id]
+    );
+  },
+
+  updateDiscountInfo: async (id: number, discountCode: string | null, discountText: string | null): Promise<void> => {
+    await pool.query(
+      'UPDATE products SET discount_code = $1, discount_text = $2 WHERE id = $3',
+      [discountCode, discountText, id]
     );
   },
 
@@ -897,7 +906,7 @@ export const stockStatusHistoryQueries = {
 };
 
 // Notification History types and queries
-export type NotificationType = 'price_drop' | 'price_target' | 'stock_change';
+export type NotificationType = 'price_drop' | 'price_target' | 'stock_change' | 'voucher_available';
 
 export interface NotificationHistory {
   id: number;

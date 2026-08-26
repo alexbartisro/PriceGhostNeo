@@ -214,6 +214,43 @@ async function checkPrices(): Promise<void> {
           console.warn(`Could not extract price for product ${product.id}`);
         }
 
+        // Check for a newly-detected (or changed) discount/voucher code
+        const hasNewDiscount =
+          (scrapedData.discountCode || scrapedData.discountText) &&
+          (scrapedData.discountCode !== product.discount_code || scrapedData.discountText !== product.discount_text);
+
+        if (hasNewDiscount) {
+          try {
+            const userSettings = await userQueries.getNotificationSettings(product.user_id);
+            if (userSettings) {
+              const payload: NotificationPayload = {
+                productName: product.name || 'Unknown Product',
+                productUrl: product.url,
+                type: 'voucher_available',
+                discountCode: scrapedData.discountCode,
+                discountText: scrapedData.discountText,
+              };
+              const result = await sendNotifications(userSettings, payload);
+              console.log(`Voucher notification sent for product ${product.id}`);
+
+              if (result.channelsNotified.length > 0) {
+                await notificationHistoryQueries.create({
+                  user_id: product.user_id,
+                  product_id: product.id,
+                  notification_type: 'voucher_available' as NotificationType,
+                  channels_notified: result.channelsNotified,
+                  product_name: product.name || 'Unknown Product',
+                  product_url: product.url,
+                });
+              }
+            }
+          } catch (notifyError) {
+            console.error(`Failed to send voucher notification for product ${product.id}:`, notifyError);
+          }
+        }
+
+        await productQueries.updateDiscountInfo(product.id, scrapedData.discountCode, scrapedData.discountText);
+
         // Update last_checked and schedule next check with jitter
         await productQueries.updateLastChecked(product.id, product.refresh_interval);
 

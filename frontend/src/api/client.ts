@@ -72,6 +72,8 @@ export interface Product {
   current_price: number | null;
   currency: string | null;
   ai_status: AIStatus;
+  discount_code: string | null;
+  discount_text: string | null;
   sparkline?: SparklinePoint[];
   price_change_7d?: number | null;
   min_price?: number | null;

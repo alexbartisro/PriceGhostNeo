@@ -30,6 +30,8 @@ export interface AIVerificationResult {
   suggestedPrice: ParsedPrice | null;
   reason: string;
   stockStatus?: StockStatus;
+  discountCode: string | null;
+  discountText: string | null;
 }
 
 export interface AIStockStatusResult {
@@ -76,12 +78,16 @@ Common availability issues to watch for:
 - Product has no "Add to Cart" button but shows a future release date - NOT in stock
 - Product CAN be added to cart and purchased today - IN stock
 
+Also check for any discount/voucher/coupon code advertised on the page (e.g. a banner reading "Voucher -15% Extra" or "extra -20% Cod: SCHOOL"). This is separate from the price itself - report it if visible, whether or not it's already applied to the shown price.
+
 Return a JSON object with:
 - isCorrect: boolean - true if the scraped price is correct
 - confidence: number from 0 to 1
 - suggestedPrice: the correct price as a number (or null if scraped price is correct)
 - suggestedCurrency: currency code if suggesting a different price
 - stockStatus: MUST be "in_stock" or "out_of_stock" - use "out_of_stock" if the product cannot be purchased RIGHT NOW (including pre-order, coming soon, future availability dates). Only use "unknown" if there is absolutely no availability information on the page.
+- discountCode: a short voucher/coupon code if one is visible on the page (e.g. "SCHOOL"), or null if none is visible or none is required
+- discountText: a brief human-readable summary of the discount if one is visible (e.g. "-15% Extra" or "extra -20%"), or null if none is visible
 - reason: brief explanation of your decision (mention both price and availability)
 
 IMPORTANT: If you mention in your reason that the product is "not available", "coming soon", "pre-order", or has a future date, you MUST set stockStatus to "out_of_stock", NOT "unknown".
@@ -678,6 +684,8 @@ function parseVerificationResponse(
     suggestedPrice: null,
     reason: 'Could not parse AI response',
     stockStatus: 'unknown',
+    discountCode: null,
+    discountText: null,
   };
 
   // Strip thinking tags from models like Qwen3/DeepSeek
@@ -730,6 +738,8 @@ function parseVerificationResponse(
       suggestedPrice,
       reason: data.reason || 'No reason provided',
       stockStatus,
+      discountCode: data.discountCode || null,
+      discountText: data.discountText || null,
     };
   } catch (error) {
     console.error('[AI Verify] Failed to parse response:', responseText);

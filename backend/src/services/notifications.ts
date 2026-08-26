@@ -15,12 +15,14 @@ function getCurrencySymbol(currency?: string): string {
 export interface NotificationPayload {
   productName: string;
   productUrl: string;
-  type: 'price_drop' | 'back_in_stock' | 'target_price';
+  type: 'price_drop' | 'back_in_stock' | 'target_price' | 'voucher_available';
   oldPrice?: number;
   newPrice?: number;
   currency?: string;
   threshold?: number;
   targetPrice?: number;
+  discountCode?: string | null;
+  discountText?: string | null;
 }
 
 function formatMessage(payload: NotificationPayload): string {
@@ -55,6 +57,15 @@ function formatMessage(payload: NotificationPayload): string {
     return `🎉 Back in Stock!\n\n` +
       `📦 ${payload.productName}\n\n` +
       `✅ This item is now available${priceStr}\n\n` +
+      `🔗 ${payload.productUrl}`;
+  }
+
+  if (payload.type === 'voucher_available') {
+    const codeLine = payload.discountCode ? `🔑 Code: ${payload.discountCode}\n` : '';
+    const textLine = payload.discountText ? `${payload.discountText}\n` : '';
+    return `🏷️ Discount Available!\n\n` +
+      `📦 ${payload.productName}\n\n` +
+      codeLine + textLine + `\n` +
       `🔗 ${payload.productUrl}`;
   }
 
