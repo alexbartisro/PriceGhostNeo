@@ -227,6 +227,11 @@ router.put('/:id', async (req: AuthRequest, res: Response) => {
 
     const { name, refresh_interval, price_drop_threshold, target_price, notify_back_in_stock, ai_verification_disabled, ai_extraction_disabled, currency_override } = req.body;
 
+    if (currency_override !== undefined && !/^[A-Z]{3}$/.test(currency_override)) {
+      res.status(400).json({ error: 'currency_override must be a 3-letter currency code (e.g. USD, RON)' });
+      return;
+    }
+
     const product = await productQueries.update(productId, userId, {
       name,
       refresh_interval,

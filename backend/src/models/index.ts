@@ -588,8 +588,14 @@ export const productQueries = {
       values
     );
 
+    if (!result.rows[0]) return null;
+
     // A manual currency correction should fix what's currently displayed
-    // immediately, not wait for the next scheduled recheck
+    // immediately, not wait for the next scheduled recheck. Only runs once
+    // we've confirmed the product update above actually matched a row this
+    // user owns - otherwise a caller could patch another user's price history
+    // for a product ID they don't own even though the product update itself
+    // (scoped to user_id) would silently no-op.
     if (updates.currency_override !== undefined && updates.currency_override) {
       await pool.query(
         `UPDATE price_history SET currency = $1
@@ -598,7 +604,7 @@ export const productQueries = {
       );
     }
 
-    return result.rows[0] || null;
+    return result.rows[0];
   },
 
   delete: async (id: number, userId: number): Promise<boolean> => {
