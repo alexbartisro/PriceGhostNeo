@@ -211,11 +211,19 @@ function prepareHtmlForAI(html: string): string {
     '[role="main"]',
   ];
 
+  // Evaluate every selector and keep the largest qualifying match, rather than
+  // stopping at the first one - a small unrelated widget (e.g. a sticky mini
+  // navbar whose id happens to contain "product") can otherwise win over the
+  // actual product body just by appearing earlier in this priority list,
+  // silently dropping real page content (discount banners, badges, etc.)
+  // from what the AI ever sees.
+  let bestLength = 0;
   for (const selector of productSelectors) {
     const section = $(selector).first();
-    if (section.length && section.html() && section.html()!.length > 500) {
-      content = section.html()!;
-      break;
+    const sectionHtml = section.length ? section.html() : null;
+    if (sectionHtml && sectionHtml.length > 500 && sectionHtml.length > bestLength) {
+      content = sectionHtml;
+      bestLength = sectionHtml.length;
     }
   }
 
