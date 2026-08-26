@@ -1127,7 +1127,7 @@ const genericImageSelectors = [
   'img[class*="product"]',
 ];
 
-export async function scrapeProduct(url: string, userId?: number): Promise<ScrapedProduct> {
+export async function scrapeProduct(url: string, userId?: number, currencyOverride?: string): Promise<ScrapedProduct> {
   const result: ScrapedProduct = {
     name: null,
     price: null,
@@ -1356,6 +1356,10 @@ export async function scrapeProduct(url: string, userId?: number): Promise<Scrap
     console.error(`Error scraping ${url}:`, error);
   }
 
+  if (currencyOverride && result.price) {
+    result.price.currency = currencyOverride;
+  }
+
   return result;
 }
 
@@ -1367,6 +1371,7 @@ export async function scrapeProduct(url: string, userId?: number): Promise<Scrap
  *                      variant on refresh when multiple prices are found.
  * @param skipAiVerification - If true, skip AI verification entirely for this product.
  * @param skipAiExtraction - If true, skip AI extraction fallback for this product.
+ * @param currencyOverride - If set, replaces the detected currency unconditionally (manual correction).
  */
 export async function scrapeProductWithVoting(
   url: string,
@@ -1374,7 +1379,8 @@ export async function scrapeProductWithVoting(
   preferredMethod?: ExtractionMethod,
   anchorPrice?: number,
   skipAiVerification?: boolean,
-  skipAiExtraction?: boolean
+  skipAiExtraction?: boolean,
+  currencyOverride?: string
 ): Promise<ScrapedProductWithCandidates> {
   const result: ScrapedProductWithCandidates = {
     name: null,
@@ -1754,6 +1760,10 @@ export async function scrapeProductWithVoting(
 
   } catch (error) {
     console.error(`[Voting] Error scraping ${url}:`, error);
+  }
+
+  if (currencyOverride && result.price) {
+    result.price.currency = currencyOverride;
   }
 
   return result;

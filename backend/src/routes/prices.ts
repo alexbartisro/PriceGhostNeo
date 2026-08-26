@@ -76,7 +76,8 @@ router.post('/:productId/refresh', async (req: AuthRequest, res: Response) => {
       preferredMethod as ExtractionMethod | undefined,
       anchorPrice || undefined,
       skipAiVerification,
-      skipAiExtraction
+      skipAiExtraction,
+      product.currency_override || undefined
     );
 
     // Update stock status and record change if different

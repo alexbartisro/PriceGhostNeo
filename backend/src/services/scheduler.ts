@@ -44,7 +44,8 @@ async function checkPrices(): Promise<void> {
           preferredMethod as ExtractionMethod | undefined,
           anchorPrice || undefined,
           skipAiVerification,
-          skipAiExtraction
+          skipAiExtraction,
+          product.currency_override || undefined
         );
 
         console.log(`[Scheduler] Product ${product.id} - scraped price: ${scrapedData.price?.price}, candidates: ${scrapedData.priceCandidates.map(c => `${c.price}(${c.method})`).join(', ')}`);

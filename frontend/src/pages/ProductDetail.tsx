@@ -13,7 +13,7 @@ import {
   PriceHistory,
   NotificationSettings,
 } from '../api/client';
-import { formatPrice } from '../utils/currency';
+import { formatPrice, SUPPORTED_CURRENCIES } from '../utils/currency';
 
 export default function ProductDetail() {
   const { id } = useParams<{ id: string }>();
@@ -129,6 +129,20 @@ export default function ProductDetail() {
       showToast('Check interval updated');
     } catch {
       showToast('Failed to update refresh interval', 'error');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleCurrencyOverrideChange = async (newCurrency: string) => {
+    if (!product) return;
+    setIsSaving(true);
+    try {
+      await productsApi.update(productId, { currency_override: newCurrency });
+      setProduct({ ...product, currency_override: newCurrency, currency: newCurrency });
+      showToast('Currency updated');
+    } catch {
+      showToast('Failed to update currency', 'error');
     } finally {
       setIsSaving(false);
     }
@@ -565,6 +579,27 @@ export default function ProductDetail() {
                 {product.refresh_interval === 300 && (
                   <small style={{ color: 'var(--warning)', marginTop: '0.25rem', display: 'block', fontSize: '0.75rem' }}>
                     Warning: May cause rate limiting
+                  </small>
+                )}
+              </div>
+              <div className="product-detail-meta-item">
+                <span className="product-detail-meta-label">Currency</span>
+                <select
+                  className="product-detail-meta-select"
+                  value={product.currency_override || product.currency || ''}
+                  onChange={(e) => handleCurrencyOverrideChange(e.target.value)}
+                  disabled={isSaving}
+                >
+                  {!product.currency && <option value="">Auto-detect</option>}
+                  {SUPPORTED_CURRENCIES.map((code) => (
+                    <option key={code} value={code}>
+                      {code}
+                    </option>
+                  ))}
+                </select>
+                {product.currency_override && (
+                  <small style={{ color: 'var(--text-muted)', marginTop: '0.25rem', display: 'block', fontSize: '0.75rem' }}>
+                    Manually set — won't be overwritten by auto-detection
                   </small>
                 )}
               </div>

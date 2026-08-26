@@ -74,6 +74,7 @@ export interface Product {
   ai_status: AIStatus;
   discount_code: string | null;
   discount_text: string | null;
+  currency_override: string | null;
   sparkline?: SparklinePoint[];
   price_change_7d?: number | null;
   min_price?: number | null;
@@ -145,6 +146,7 @@ export const productsApi = {
     notify_back_in_stock?: boolean;
     ai_verification_disabled?: boolean;
     ai_extraction_disabled?: boolean;
+    currency_override?: string;
   }) => api.put<Product>(`/products/${id}`, data),
 
   delete: (id: number) => api.delete(`/products/${id}`),

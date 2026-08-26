@@ -217,6 +217,10 @@ async function runMigrations() {
         IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'products' AND column_name = 'discount_text') THEN
           ALTER TABLE products ADD COLUMN discount_text TEXT;
         END IF;
+        -- Manual currency override, sticks across future auto-detection re-runs
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'products' AND column_name = 'currency_override') THEN
+          ALTER TABLE products ADD COLUMN currency_override VARCHAR(10);
+        END IF;
       END $$;
     `);
 

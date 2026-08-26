@@ -225,7 +225,7 @@ router.put('/:id', async (req: AuthRequest, res: Response) => {
       return;
     }
 
-    const { name, refresh_interval, price_drop_threshold, target_price, notify_back_in_stock, ai_verification_disabled, ai_extraction_disabled } = req.body;
+    const { name, refresh_interval, price_drop_threshold, target_price, notify_back_in_stock, ai_verification_disabled, ai_extraction_disabled, currency_override } = req.body;
 
     const product = await productQueries.update(productId, userId, {
       name,
@@ -235,6 +235,7 @@ router.put('/:id', async (req: AuthRequest, res: Response) => {
       notify_back_in_stock,
       ai_verification_disabled,
       ai_extraction_disabled,
+      currency_override,
     });
 
     if (!product) {

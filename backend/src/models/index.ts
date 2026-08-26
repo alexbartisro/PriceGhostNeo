@@ -372,6 +372,7 @@ export interface Product {
   checking_paused: boolean;
   discount_code: string | null;
   discount_text: string | null;
+  currency_override: string | null;
   created_at: Date;
 }
 
@@ -537,6 +538,7 @@ export const productQueries = {
       notify_back_in_stock?: boolean;
       ai_verification_disabled?: boolean;
       ai_extraction_disabled?: boolean;
+      currency_override?: string | null;
     }
   ): Promise<Product | null> => {
     const fields: string[] = [];
@@ -571,6 +573,10 @@ export const productQueries = {
       fields.push(`ai_extraction_disabled = $${paramIndex++}`);
       values.push(updates.ai_extraction_disabled);
     }
+    if (updates.currency_override !== undefined) {
+      fields.push(`currency_override = $${paramIndex++}`);
+      values.push(updates.currency_override);
+    }
 
     if (fields.length === 0) return null;
 
@@ -581,6 +587,17 @@ export const productQueries = {
        RETURNING *`,
       values
     );
+
+    // A manual currency correction should fix what's currently displayed
+    // immediately, not wait for the next scheduled recheck
+    if (updates.currency_override !== undefined && updates.currency_override) {
+      await pool.query(
+        `UPDATE price_history SET currency = $1
+         WHERE id = (SELECT id FROM price_history WHERE product_id = $2 ORDER BY recorded_at DESC LIMIT 1)`,
+        [updates.currency_override, id]
+      );
+    }
+
     return result.rows[0] || null;
   },
 

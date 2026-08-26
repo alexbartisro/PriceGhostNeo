@@ -15,6 +15,13 @@ const CURRENCY_CODE_PREFIXES: Record<string, string> = {
   RON: 'RON ',
 };
 
+// Currencies this app can display with a dedicated symbol or code prefix -
+// the options offered by the manual currency-override picker.
+export const SUPPORTED_CURRENCIES = [
+  ...Object.keys(CURRENCY_SYMBOLS),
+  ...Object.keys(CURRENCY_CODE_PREFIXES),
+];
+
 export function formatPrice(price: number | string | null | undefined, currency: string | null | undefined): string {
   if (price === null || price === undefined) return 'N/A';
   const numPrice = typeof price === 'string' ? parseFloat(price) : price;
