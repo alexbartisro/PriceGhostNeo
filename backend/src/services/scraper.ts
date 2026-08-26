@@ -1553,6 +1553,10 @@ export async function scrapeProductWithVoting(
               console.log(`[Voting] AI stock status for $${closestCandidate.price} variant: ${stockResult.stockStatus} (${stockResult.reason})`);
               result.stockStatus = stockResult.stockStatus;
             }
+            if (stockResult) {
+              result.discountCode = stockResult.discountCode;
+              result.discountText = stockResult.discountText;
+            }
           } catch (stockError) {
             console.error(`[Voting] AI stock status verification failed:`, stockError);
           }
@@ -1585,6 +1589,10 @@ export async function scrapeProductWithVoting(
             if (stockResult && stockResult.confidence > 0.6) {
               console.log(`[Voting] AI stock status for $${closestCandidate.price} variant: ${stockResult.stockStatus} (${stockResult.reason})`);
               result.stockStatus = stockResult.stockStatus;
+            }
+            if (stockResult) {
+              result.discountCode = stockResult.discountCode;
+              result.discountText = stockResult.discountText;
             }
           } catch (stockError) {
             console.error(`[Voting] AI stock status verification failed:`, stockError);

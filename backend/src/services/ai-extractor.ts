@@ -38,6 +38,8 @@ export interface AIStockStatusResult {
   stockStatus: StockStatus;
   confidence: number;
   reason: string;
+  discountCode: string | null;
+  discountText: string | null;
 }
 
 // AI provider SDKs here don't set their own request timeout, so a slow/overloaded
@@ -119,10 +121,14 @@ Signs the $VARIANT_PRICE$ variant is OUT OF STOCK:
 - The price exists but the specific variant cannot be added to cart
 - A different price is shown as the main purchasable option
 
+Also check for any discount/voucher/coupon code advertised on the page (e.g. a banner reading "Voucher -15% Extra" or "extra -20% Cod: SCHOOL"), regardless of which variant it applies to.
+
 Return a JSON object with:
 - stockStatus: MUST be "in_stock" or "out_of_stock". Only use "unknown" if there is absolutely no availability information.
 - confidence: number from 0 to 1
 - reason: brief explanation focusing on the $VARIANT_PRICE$ variant specifically
+- discountCode: a short voucher/coupon code if one is visible on the page (e.g. "SCHOOL"), or null if none is visible
+- discountText: a brief human-readable summary of the discount if one is visible (e.g. "-15% Extra"), or null if none is visible
 
 IMPORTANT: If your reason mentions the product is unavailable, coming soon, pre-order, or has a future date, set stockStatus to "out_of_stock".
 
@@ -629,6 +635,8 @@ function parseStockStatusResponse(responseText: string): AIStockStatusResult {
     stockStatus: 'unknown',
     confidence: 0,
     reason: 'Failed to parse AI response',
+    discountCode: null,
+    discountText: null,
   };
 
   try {
@@ -663,6 +671,8 @@ function parseStockStatusResponse(responseText: string): AIStockStatusResult {
       stockStatus,
       confidence: typeof parsed.confidence === 'number' ? parsed.confidence : 0.5,
       reason: parsed.reason || 'No reason provided',
+      discountCode: parsed.discountCode || null,
+      discountText: parsed.discountText || null,
     };
   } catch (error) {
     console.error(`[AI Stock] Failed to parse response:`, error);
